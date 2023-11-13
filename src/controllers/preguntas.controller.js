@@ -26,9 +26,17 @@ export const getPregunta = async (req, res) => {
 }
 
 export const createPreguntas = async (req, res) => {
-    try{
-        const { categoria, pregunta, respuesta, incorrecta1, incorrecta2, incorrecta3 } = req.body
-        const  [ rows ] = await pool.query( 'INSERT INTO preguntas (categoria, pregunta, respuesta, incorrecta1, incorrecta2, incorrecta3) VALUES (?,?,?,?,?,?)', [ categoria, pregunta, respuesta, incorrecta1, incorrecta2, incorrecta3 ] )
+    try {
+        const { categoria, pregunta, respuesta, incorrecta1, incorrecta2, incorrecta3 } = req.body;
+
+        if (!categoria || !pregunta || !respuesta || !incorrecta1 || !incorrecta2 || !incorrecta3) {
+            return res.status(400).json({
+                message: 'Todos los campos son obligatorios'
+            });
+        }
+
+        const [rows] = await pool.query('INSERT INTO preguntas (categoria, pregunta, respuesta, incorrecta1, incorrecta2, incorrecta3) VALUES (?,?,?,?,?,?)', [categoria, pregunta, respuesta, incorrecta1, incorrecta2, incorrecta3]);
+        
         res.send({
             id: rows.insertId,
             categoria,
@@ -37,14 +45,12 @@ export const createPreguntas = async (req, res) => {
             incorrecta1,
             incorrecta2,
             incorrecta3
-        })
-    }catch (error){
+        });
+    } catch (error) {
         return res.status(500).json({
             message: 'Error interno'
-        })
+        });
     }
-
-
 }
 
 export const updatePreguntas = async (req, res) => {
