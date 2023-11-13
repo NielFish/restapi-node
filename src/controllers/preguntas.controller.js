@@ -81,7 +81,8 @@ export const deletPreguntas = async (req, res) => {
         if(result.affectedRows <= 0) return res.status(404).json({message: 'Pregunta no encontrada'})
 
         res.sendStatus(204)
-    }catch (error){
+        return res.json({ message: 'Pregunta eliminada correctamente' }) // Agregado para notificar la eliminación
+    } catch (error){
         return res.status(500).json({
             message: 'Error interno'
         })
