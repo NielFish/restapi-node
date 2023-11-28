@@ -66,38 +66,19 @@ export const createPreguntas = async (req, res) => {
 };
 
 export const updatePreguntas = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { categoria, pregunta, respuesta, incorrecta1, incorrecta2, incorrecta3 } = req.body;
-
-        const updateFields = {};
-
-        if (categoria) updateFields.categoria = categoria;
-        if (pregunta) updateFields.pregunta = pregunta;
-        if (respuesta) updateFields.respuesta = respuesta;
-        if (incorrecta1) updateFields.incorrecta1 = incorrecta1;
-        if (incorrecta2) updateFields.incorrecta2 = incorrecta2;
-        if (incorrecta3) updateFields.incorrecta3 = incorrecta3;
-
-        const fieldNames = Object.keys(updateFields);
-        const fieldValues = fieldNames.map(fieldName => updateFields[fieldName]);
-
-        const updateQuery = `UPDATE preguntas SET ${fieldNames.map(fieldName => `${fieldName} = IFNULL(?, ${fieldName})`).join(', ')} WHERE id = ?`;
-
-        const [result] = await pool.query(updateQuery, [...fieldValues, id]);
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'Pregunta no encontrada' });
-        }
-
-        const [rows] = await pool.query('SELECT * FROM preguntas WHERE id = ?', [id]);
-        res.json(rows[0]);
-    } catch (error) {
+    try{
+        const {id} = req.params
+        const { categoria, pregunta, respuesta, incorrecta1, incorrecta2, incorrecta3  } = req.body
+        const [result] = await pool.query('UPDATE preguntas SET categoria = IFNULL(?, categoria) , pregunta = IFNULL(?, pregunta), respuesta = IFNULL(?, respuesta ), incorrecta1 = IFNULL(?, incorrecta1), incorrecta2 = IFNULL(?, incorrecta2), incorrecta3 = IFNULL(?, incorrecta3) WHERE id = ?', [ categoria, pregunta, respuesta, incorrecta1, incorrecta2, incorrecta3, id ])
+        if (result.affectedRows === 0) return res.status(404).json({message: 'Pregunta no encontrada'})
+        const [rows] = await pool.query('SELECT * FROM preguntas WHERE id = ?', [id])
+        res.json(rows[0])
+    }catch (error){
         return res.status(500).json({
-            message: 'Error interno',
-        });
+            message: 'Error interno'
+        })
     }
-};
+}
 
 
 export const deletPreguntas = async (req, res) => {
