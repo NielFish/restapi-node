@@ -69,40 +69,33 @@ export const updatePreguntas = async (req, res) => {
     try {
         const { id } = req.params;
         const { categoria, pregunta, respuesta, incorrecta1, incorrecta2, incorrecta3 } = req.body;
-        const updateFields = {
-            categoria,
-            pregunta,
-            respuesta,
-            incorrecta1,
-            incorrecta2,
-            incorrecta3,
-        };
 
-        // Filtra los campos que no están definidos para actualizar
-        const validUpdateFields = Object.fromEntries(Object.entries(updateFields).filter(([key, value]) => value !== undefined));
+        const updateFields = {};
 
-        if (Object.keys(validUpdateFields).length === 0) {
-            responseStructure.success = false;
-            responseStructure.message = 'No se proporcionaron campos válidos para actualizar';
-            return res.status(400).json(responseStructure);
-        }
+        if (categoria) updateFields.categoria = categoria;
+        if (pregunta) updateFields.pregunta = pregunta;
+        if (respuesta) updateFields.respuesta = respuesta;
+        if (incorrecta1) updateFields.incorrecta1 = incorrecta1;
+        if (incorrecta2) updateFields.incorrecta2 = incorrecta2;
+        if (incorrecta3) updateFields.incorrecta3 = incorrecta3;
 
-        const updateQuery = 'UPDATE preguntas SET ? WHERE id = ?';
-        const [result] = await pool.query(updateQuery, [validUpdateFields, id]);
+        const fieldNames = Object.keys(updateFields);
+        const fieldValues = fieldNames.map(fieldName => updateFields[fieldName]);
+
+        const updateQuery = `UPDATE preguntas SET ${fieldNames.map(fieldName => `${fieldName} = IFNULL(?, ${fieldName})`).join(', ')} WHERE id = ?`;
+
+        const [result] = await pool.query(updateQuery, [...fieldValues, id]);
 
         if (result.affectedRows === 0) {
-            responseStructure.success = false;
-            responseStructure.message = 'Pregunta no encontrada';
-            return res.status(404).json(responseStructure);
+            return res.status(404).json({ message: 'Pregunta no encontrada' });
         }
 
         const [rows] = await pool.query('SELECT * FROM preguntas WHERE id = ?', [id]);
-        responseStructure.data = rows[0];
-        res.json(responseStructure);
+        res.json(rows[0]);
     } catch (error) {
-        responseStructure.success = false;
-        responseStructure.message = 'Error interno';
-        res.status(500).json(responseStructure);
+        return res.status(500).json({
+            message: 'Error interno',
+        });
     }
 };
 
