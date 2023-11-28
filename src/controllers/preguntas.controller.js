@@ -68,14 +68,28 @@ export const createPreguntas = async (req, res) => {
 export const updatePreguntas = async (req, res) => {
     try {
         const { id } = req.params;
-        const { campoModificar, nuevoValor } = req.body; // Ajusta según los campos específicos de tu aplicación
-        if (!campoModificar || nuevoValor === undefined) {
+        const { categoria, pregunta, respuesta, incorrecta1, incorrecta2, incorrecta3 } = req.body;
+        const updateFields = {
+            categoria,
+            pregunta,
+            respuesta,
+            incorrecta1,
+            incorrecta2,
+            incorrecta3,
+        };
+
+        // Filtra los campos que no están definidos para actualizar
+        const validUpdateFields = Object.fromEntries(Object.entries(updateFields).filter(([key, value]) => value !== undefined));
+
+        if (Object.keys(validUpdateFields).length === 0) {
             responseStructure.success = false;
-            responseStructure.message = 'Campo a modificar y nuevo valor son obligatorios';
+            responseStructure.message = 'No se proporcionaron campos válidos para actualizar';
             return res.status(400).json(responseStructure);
         }
 
-        const [result] = await pool.query(`UPDATE preguntas SET ${campoModificar} = ? WHERE id = ?`, [nuevoValor, id]);
+        const updateQuery = 'UPDATE preguntas SET ? WHERE id = ?';
+        const [result] = await pool.query(updateQuery, [validUpdateFields, id]);
+
         if (result.affectedRows === 0) {
             responseStructure.success = false;
             responseStructure.message = 'Pregunta no encontrada';
