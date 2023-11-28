@@ -1,36 +1,54 @@
-import { pool } from '../db.js'
+import { pool } from '../db.js';
+
+const responseStructure = {
+    success: true,
+    data: [],
+    message: '',
+    errors: '',
+    rows: 0,
+};
+
 export const getPreguntas = async (req, res) => {
-    try{
-        const [rows] = await pool.query('SELECT * FROM preguntas')
-        res.json(rows)
-    }catch (error){
-       return res.status(500).json({
-           message: 'Error interno'
-       })
+    try {
+        const [rows] = await pool.query('SELECT * FROM preguntas');
+        responseStructure.data = rows;
+        responseStructure.rows = rows.length;
+        res.json(responseStructure);
+    } catch (error) {
+        responseStructure.success = false;
+        responseStructure.message = 'Error interno';
+        res.status(500).json(responseStructure);
     }
-}
+};
+
 export const getPregunta = async (req, res) => {
-    try{
-        const [rows] = await pool.query('SELECT * FROM preguntas WHERE id = ?', [req.params.id])
-        if(rows.length <= 0) return res.status(404).json({message: 'Pregunta no encontrada'})
-        res.json(rows[0])
-    }catch (error){
-        return res.status(500).json({
-            message: 'Error interno'
-        })
+    try {
+        const [rows] = await pool.query('SELECT * FROM preguntas WHERE id = ?', [req.params.id]);
+        if (rows.length <= 0) {
+            responseStructure.success = false;
+            responseStructure.message = 'Pregunta no encontrada';
+            return res.status(404).json(responseStructure);
+        }
+        responseStructure.data = rows[0];
+        res.json(responseStructure);
+    } catch (error) {
+        responseStructure.success = false;
+        responseStructure.message = 'Error interno';
+        res.status(500).json(responseStructure);
     }
-}
+};
+
 export const createPreguntas = async (req, res) => {
     try {
         const { categoria, pregunta, respuesta, incorrecta1, incorrecta2, incorrecta3 } = req.body;
         if (!categoria || !pregunta || !respuesta || !incorrecta1 || !incorrecta2 || !incorrecta3) {
-            return res.status(400).json({
-                message: 'Todos los campos son obligatorios'
-            });
+            responseStructure.success = false;
+            responseStructure.message = 'Todos los campos son obligatorios';
+            return res.status(400).json(responseStructure);
         }
         const [rows] = await pool.query('INSERT INTO preguntas (categoria, pregunta, respuesta, incorrecta1, incorrecta2, incorrecta3) VALUES (?,?,?,?,?,?)', [categoria, pregunta, respuesta, incorrecta1, incorrecta2, incorrecta3]);
-        
-        res.send({
+
+        responseStructure.data = {
             id: rows.insertId,
             categoria,
             pregunta,
@@ -38,39 +56,48 @@ export const createPreguntas = async (req, res) => {
             incorrecta1,
             incorrecta2,
             incorrecta3
-        });
+        };
+        res.json(responseStructure);
     } catch (error) {
-        return res.status(500).json({
-            message: 'Error interno'
-        });
+        responseStructure.success = false;
+        responseStructure.message = 'Error interno';
+        res.status(500).json(responseStructure);
     }
-}
+};
+
 export const updatePreguntas = async (req, res) => {
-    try{
-        const {id} = req.params
-        const { categoria, pregunta, respuesta, incorrecta1, incorrecta2, incorrecta3  } = req.body
-        const [result] = await pool.query('UPDATE preguntas SET categoria = IFNULL(?, categoria) , pregunta = IFNULL(?, pregunta), respuesta = IFNULL(?, respuesta ), incorrecta1 = IFNULL(?, incorrecta1), incorrecta2 = IFNULL(?, incorrecta2), incorrecta3 = IFNULL(?, incorrecta3) WHERE id = ?', [ categoria, pregunta, respuesta, incorrecta1, incorrecta2, incorrecta3, id ])
-        if (result.affectedRows === 0) return res.status(404).json({message: 'Pregunta no encontrada'})
-        const [rows] = await pool.query('SELECT * FROM preguntas WHERE id = ?', [id])
-        res.json(rows[0])
-    }catch (error){
-        return res.status(500).json({
-            message: 'Error interno'
-        })
+    try {
+        const { id } = req.params;
+        const { categoria, pregunta, respuesta, incorrecta1, incorrecta2, incorrecta3 } = req.body;
+        const [result] = await pool.query('UPDATE preguntas SET categoria = IFNULL(?, categoria) , pregunta = IFNULL(?, pregunta), respuesta = IFNULL(?, respuesta ), incorrecta1 = IFNULL(?, incorrecta1), incorrecta2 = IFNULL(?, incorrecta2), incorrecta3 = IFNULL(?, incorrecta3) WHERE id = ?', [categoria, pregunta, respuesta, incorrecta1, incorrecta2, incorrecta3, id]);
+        if (result.affectedRows === 0) {
+            responseStructure.success = false;
+            responseStructure.message = 'Pregunta no encontrada';
+            return res.status(404).json(responseStructure);
+        }
+        const [rows] = await pool.query('SELECT * FROM preguntas WHERE id = ?', [id]);
+        responseStructure.data = rows[0];
+        res.json(responseStructure);
+    } catch (error) {
+        responseStructure.success = false;
+        responseStructure.message = 'Error interno';
+        res.status(500).json(responseStructure);
     }
-}
+};
+
 export const deletPreguntas = async (req, res) => {
-    try{
-        const [result] = await pool.query('DELETE FROM preguntas WHERE id = ?', [req.params.id])
-
-        if(result.affectedRows <= 0) return res.status(404).json({message: 'Pregunta no encontrada'})
-
-        res.sendStatus(204)
-        return res.json({ message: 'Pregunta eliminada correctamente' }) // Agregado para notificar la eliminación
-        res.sendStatus(204)
-    } catch (error){
-        return res.status(500).json({
-            message: 'Error interno'
-        })
+    try {
+        const [result] = await pool.query('DELETE FROM preguntas WHERE id = ?', [req.params.id]);
+        if (result.affectedRows <= 0) {
+            responseStructure.success = false;
+            responseStructure.message = 'Pregunta no encontrada';
+            return res.status(404).json(responseStructure);
+        }
+        responseStructure.message = 'Pregunta eliminada correctamente';
+        res.json(responseStructure);
+    } catch (error) {
+        responseStructure.success = false;
+        responseStructure.message = 'Error interno';
+        res.status(500).json(responseStructure);
     }
-}
+};
