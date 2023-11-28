@@ -1,15 +1,26 @@
 import { pool } from '../db.js'
 
 export const getPreguntas = async (req, res) => {
-    try{
-        const [rows] = await pool.query('SELECT * FROM preguntas')
-        res.json(rows)
-    }catch (error){
-       return res.status(500).json({
-           message: 'Error interno'
-       })
+    try {
+        const [rows] = await pool.query('SELECT * FROM preguntas');
+        res.json({
+            success: true,
+            data: rows,
+            message: "Datos obtenidos exitosamente",
+            errors: "",
+            rows: rows.length
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            data: [],
+            message: "Error interno",
+            errors: error.message,
+            rows: 0
+        });
     }
 }
+
 
 export const getPregunta = async (req, res) => {
     try{
