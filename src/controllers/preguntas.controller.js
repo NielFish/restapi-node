@@ -23,16 +23,34 @@ export const getPreguntas = async (req, res) => {
 
 
 export const getPregunta = async (req, res) => {
-    try{
+    try {
         const [rows] = await pool.query('SELECT * FROM preguntas WHERE id = ?', [req.params.id])
 
-        if(rows.length <= 0) return res.status(404).json({message: 'Pregunta no encontrada'})
+        if (rows.length <= 0) {
+            return res.status(404).json({
+                success: false,
+                data: [],
+                message: 'Pregunta no encontrada',
+                errors: "",
+                rows: 0
+            });
+        }
 
-        res.json(rows[0])
-    }catch (error){
+        res.json({
+            success: true,
+            data: rows[0],
+            message: "Pregunta obtenida exitosamente",
+            errors: "",
+            rows: 1
+        });
+    } catch (error) {
         return res.status(500).json({
-            message: 'Error interno'
-        })
+            success: false,
+            data: [],
+            message: 'Error interno',
+            errors: error.message,
+            rows: 0
+        });
     }
 }
 
@@ -42,59 +60,109 @@ export const createPreguntas = async (req, res) => {
 
         if (!categoria || !pregunta || !respuesta || !incorrecta1 || !incorrecta2 || !incorrecta3) {
             return res.status(400).json({
-                message: 'Todos los campos son obligatorios'
+                success: false,
+                data: [],
+                message: 'Todos los campos son obligatorios',
+                errors: "",
+                rows: 0
             });
         }
 
         const [rows] = await pool.query('INSERT INTO preguntas (categoria, pregunta, respuesta, incorrecta1, incorrecta2, incorrecta3) VALUES (?,?,?,?,?,?)', [categoria, pregunta, respuesta, incorrecta1, incorrecta2, incorrecta3]);
-        
-        res.send({
-            id: rows.insertId,
-            categoria,
-            pregunta,
-            respuesta,
-            incorrecta1,
-            incorrecta2,
-            incorrecta3
+
+        res.json({
+            success: true,
+            data: {
+                id: rows.insertId,
+                categoria,
+                pregunta,
+                respuesta,
+                incorrecta1,
+                incorrecta2,
+                incorrecta3
+            },
+            message: "Pregunta creada exitosamente",
+            errors: "",
+            rows: 1
         });
     } catch (error) {
         return res.status(500).json({
-            message: 'Error interno'
+            success: false,
+            data: [],
+            message: 'Error interno',
+            errors: error.message,
+            rows: 0
         });
     }
 }
 
 export const updatePreguntas = async (req, res) => {
-    try{
-        const {id} = req.params
-        const { categoria, pregunta, respuesta, incorrecta1, incorrecta2, incorrecta3  } = req.body
+    try {
+        const { id } = req.params;
+        const { categoria, pregunta, respuesta, incorrecta1, incorrecta2, incorrecta3 } = req.body;
 
-        const [result] = await pool.query('UPDATE preguntas SET categoria = IFNULL(?, categoria) , pregunta = IFNULL(?, pregunta), respuesta = IFNULL(?, respuesta ), incorrecta1 = IFNULL(?, incorrecta1), incorrecta2 = IFNULL(?, incorrecta2), incorrecta3 = IFNULL(?, incorrecta3) WHERE id = ?', [ categoria, pregunta, respuesta, incorrecta1, incorrecta2, incorrecta3, id ])
+        const [result] = await pool.query('UPDATE preguntas SET categoria = IFNULL(?, categoria), pregunta = IFNULL(?, pregunta), respuesta = IFNULL(?, respuesta), incorrecta1 = IFNULL(?, incorrecta1), incorrecta2 = IFNULL(?, incorrecta2), incorrecta3 = IFNULL(?, incorrecta3) WHERE id = ?', [categoria, pregunta, respuesta, incorrecta1, incorrecta2, incorrecta3, id]);
 
-        if (result.affectedRows === 0) return res.status(404).json({message: 'Pregunta no encontrada'})
+        if (result.affectedRows === 0) {
+            return res.status(404).json({
+                success: false,
+                data: [],
+                message: 'Pregunta no encontrada',
+                errors: "",
+                rows: 0
+            });
+        }
 
-        const [rows] = await pool.query('SELECT * FROM preguntas WHERE id = ?', [id])
+        const [rows] = await pool.query('SELECT * FROM preguntas WHERE id = ?', [id]);
 
-        res.json(rows[0])
+        res.json({
+            success: true,
+            data: rows[0],
+            message: "Pregunta actualizada exitosamente",
+            errors: "",
+            rows: 1
+        });
 
-    }catch (error){
+    } catch (error) {
         return res.status(500).json({
-            message: 'Error interno'
-        })
+            success: false,
+            data: [],
+            message: 'Error interno',
+            errors: error.message,
+            rows: 0
+        });
     }
-
 }
 
 export const deletPreguntas = async (req, res) => {
-    try{
-        const [result] = await pool.query('DELETE FROM preguntas WHERE id = ?', [req.params.id])
+    try {
+        const [result] = await pool.query('DELETE FROM preguntas WHERE id = ?', [req.params.id]);
 
-        if(result.affectedRows <= 0) return res.status(404).json({message: 'Pregunta no encontrada'})
-        return res.json({ message: 'Pregunta eliminada correctamente' }) // Agregado para notificar la eliminación
-        res.sendStatus(204)
-    } catch (error){
+        if (result.affectedRows <= 0) {
+            return res.status(404).json({
+                success: false,
+                data: [],
+                message: 'Pregunta no encontrada',
+                errors: "",
+                rows: 0
+            });
+        }
+
+        return res.json({
+            success: true,
+            data: [],
+            message: 'Pregunta eliminada correctamente',
+            errors: "",
+            rows: 0
+        });
+
+    } catch (error) {
         return res.status(500).json({
-            message: 'Error interno'
-        })
+            success: false,
+            data: [],
+            message: 'Error interno',
+            errors: error.message,
+            rows: 0
+        });
     }
 }
