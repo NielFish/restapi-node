@@ -68,13 +68,20 @@ export const createPreguntas = async (req, res) => {
 export const updatePreguntas = async (req, res) => {
     try {
         const { id } = req.params;
-        const { categoria, pregunta, respuesta, incorrecta1, incorrecta2, incorrecta3 } = req.body;
-        const [result] = await pool.query('UPDATE preguntas SET categoria = IFNULL(?, categoria) , pregunta = IFNULL(?, pregunta), respuesta = IFNULL(?, respuesta ), incorrecta1 = IFNULL(?, incorrecta1), incorrecta2 = IFNULL(?, incorrecta2), incorrecta3 = IFNULL(?, incorrecta3) WHERE id = ?', [categoria, pregunta, respuesta, incorrecta1, incorrecta2, incorrecta3, id]);
+        const { campoModificar, nuevoValor } = req.body; // Ajusta según los campos específicos de tu aplicación
+        if (!campoModificar || nuevoValor === undefined) {
+            responseStructure.success = false;
+            responseStructure.message = 'Campo a modificar y nuevo valor son obligatorios';
+            return res.status(400).json(responseStructure);
+        }
+
+        const [result] = await pool.query(`UPDATE preguntas SET ${campoModificar} = ? WHERE id = ?`, [nuevoValor, id]);
         if (result.affectedRows === 0) {
             responseStructure.success = false;
             responseStructure.message = 'Pregunta no encontrada';
             return res.status(404).json(responseStructure);
         }
+
         const [rows] = await pool.query('SELECT * FROM preguntas WHERE id = ?', [id]);
         responseStructure.data = rows[0];
         res.json(responseStructure);
@@ -84,6 +91,7 @@ export const updatePreguntas = async (req, res) => {
         res.status(500).json(responseStructure);
     }
 };
+
 
 export const deletPreguntas = async (req, res) => {
     try {
